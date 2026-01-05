@@ -1,16 +1,21 @@
 // Finance Dashboard
 import { useState, useEffect, useContext } from 'react'
 import { KPITile, Card, LineChartComponent, BarChartComponent, ProgressBar, DataTable, Modal } from '../components/shared'
+import { CRUDModal } from '../components/CRUDModal'
 import { getData, getKPIsByDepartment, getActiveContracts } from '../data/dataService'
 import { formatCurrency, formatDate } from '../utils/formatters'
 import { AppContext } from '../App'
 
 export default function Finance() {
     const [data, setData] = useState(null)
+    const [showAddModal, setShowAddModal] = useState(false)
+    const [editItem, setEditItem] = useState(null)
     const { canEdit } = useContext(AppContext)
 
+    const refreshData = () => setData(getData())
+
     useEffect(() => {
-        setData(getData())
+        refreshData()
     }, [])
 
     if (!data) return null
@@ -58,7 +63,9 @@ export default function Finance() {
                     <p className="text-secondary">Revenue, burn rate, and financial runway metrics</p>
                 </div>
                 {canEdit && (
-                    <button className="btn btn-primary">+ Add Transaction</button>
+                    <button className="btn btn-primary" onClick={() => setShowAddModal(true)}>
+                        + Add KPI
+                    </button>
                 )}
             </div>
 
@@ -178,6 +185,17 @@ export default function Finance() {
                     />
                 </Card>
             </div>
+
+            {/* CRUD Modal */}
+            <CRUDModal
+                isOpen={showAddModal || !!editItem}
+                onClose={() => { setShowAddModal(false); setEditItem(null); }}
+                entityType="kpi"
+                editItem={editItem}
+                onSave={refreshData}
+                onDelete={refreshData}
+            />
         </div>
     )
 }
+

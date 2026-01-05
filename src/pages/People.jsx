@@ -1,16 +1,21 @@
 // People / Team Dashboard
 import { useState, useEffect, useContext } from 'react'
 import { KPITile, Card, DataTable, StatusBadge, ProgressBar, BarChartComponent } from '../components/shared'
+import { CRUDModal } from '../components/CRUDModal'
 import { getData, getKPIsByDepartment, getPeopleByDepartment, getOpenPositions } from '../data/dataService'
 import { formatDate } from '../utils/formatters'
 import { AppContext } from '../App'
 
 export default function People() {
     const [data, setData] = useState(null)
+    const [showAddModal, setShowAddModal] = useState(false)
+    const [editItem, setEditItem] = useState(null)
     const { canEdit } = useContext(AppContext)
 
+    const refreshData = () => setData(getData())
+
     useEffect(() => {
-        setData(getData())
+        refreshData()
     }, [])
 
     if (!data) return null
@@ -66,7 +71,9 @@ export default function People() {
                     <p className="text-secondary">Team composition, growth, and hiring</p>
                 </div>
                 {canEdit && (
-                    <button className="btn btn-primary">+ Add Position</button>
+                    <button className="btn btn-primary" onClick={() => setShowAddModal(true)}>
+                        + Add Position
+                    </button>
                 )}
             </div>
 
@@ -74,14 +81,14 @@ export default function People() {
             <div className="kpi-grid mb-6">
                 <KPITile
                     label="Team Size"
-                    value={teamSizeKPI.value}
+                    value={activePeople.length}
                     target={teamSizeKPI.target}
                     previousValue={teamSizeKPI.previousValue}
                     icon="brand"
                 />
                 <KPITile
                     label="Open Positions"
-                    value={openPosKPI.value}
+                    value={openPositions.length}
                     target={openPosKPI.target}
                     previousValue={openPosKPI.previousValue}
                     icon="warning"
@@ -96,7 +103,7 @@ export default function People() {
                 />
                 <KPITile
                     label="Growth vs Plan"
-                    value={Math.round((teamSizeKPI.value / teamSizeKPI.target) * 100)}
+                    value={Math.round((activePeople.length / teamSizeKPI.target) * 100)}
                     target={100}
                     unit="%"
                     icon="info"
@@ -135,7 +142,16 @@ export default function People() {
                             </div>
                             <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
                                 {members.map(person => (
-                                    <div key={person.id} className="flex justify-between text-sm" style={{ padding: '6px 0', borderBottom: '1px solid var(--color-border)' }}>
+                                    <div
+                                        key={person.id}
+                                        className="flex justify-between text-sm"
+                                        style={{
+                                            padding: '6px 0',
+                                            borderBottom: '1px solid var(--color-border)',
+                                            cursor: canEdit ? 'pointer' : 'default'
+                                        }}
+                                        onClick={() => canEdit && setEditItem(person)}
+                                    >
                                         <span>{person.name}</span>
                                         <span className="text-tertiary">{person.role}</span>
                                     </div>
@@ -156,6 +172,7 @@ export default function People() {
                             { key: 'status', label: 'Status', render: (v) => <StatusBadge status={v} /> },
                         ]}
                         data={openPositions}
+                        onRowClick={canEdit ? (row) => setEditItem(row) : undefined}
                     />
                 </Card>
 
@@ -177,6 +194,17 @@ export default function People() {
                     />
                 </Card>
             </div>
+
+            {/* CRUD Modal */}
+            <CRUDModal
+                isOpen={showAddModal || !!editItem}
+                onClose={() => { setShowAddModal(false); setEditItem(null); }}
+                entityType="person"
+                editItem={editItem}
+                onSave={refreshData}
+                onDelete={refreshData}
+            />
         </div>
     )
 }
+

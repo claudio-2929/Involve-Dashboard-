@@ -50,7 +50,7 @@ export default function Projects() {
                     <h2 className="text-xl font-semibold" style={{ marginBottom: '4px' }}>Projects & Programs</h2>
                     <p className="text-secondary">Active initiatives, budgets, and milestones</p>
                 </div>
-                {isAdmin && (
+                {canEdit && (
                     <button className="btn btn-primary" onClick={() => setShowAddModal(true)}>
                         + New Project
                     </button>
@@ -170,7 +170,7 @@ export default function Projects() {
                             { key: 'status', label: 'Status', render: (v) => <StatusBadge status={v} /> },
                         ]}
                         data={completedProjects}
-                        onRowClick={isAdmin ? (row) => setEditProject(row) : undefined}
+                        onRowClick={canEdit ? (row) => setEditProject(row) : undefined}
                     />
                 </Card>
             )}
@@ -183,7 +183,7 @@ export default function Projects() {
                 footer={
                     <>
                         <button className="btn btn-secondary" onClick={() => setSelectedProject(null)}>Close</button>
-                        {isAdmin && (
+                        {canEdit && (
                             <button className="btn btn-brand" onClick={() => handleEditClick(selectedProject)}>
                                 Edit Project
                             </button>

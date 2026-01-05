@@ -1,16 +1,21 @@
 // Sales & Partnerships Dashboard
 import { useState, useEffect, useContext } from 'react'
 import { KPITile, Card, DataTable, StatusBadge, ProgressBar, BarChartComponent } from '../components/shared'
+import { CRUDModal } from '../components/CRUDModal'
 import { getData, getKPIsByDepartment, getActiveContracts, getContractsByType } from '../data/dataService'
 import { formatCurrency, formatDate } from '../utils/formatters'
 import { AppContext } from '../App'
 
 export default function Sales() {
     const [data, setData] = useState(null)
+    const [showAddModal, setShowAddModal] = useState(false)
+    const [editItem, setEditItem] = useState(null)
     const { canEdit } = useContext(AppContext)
 
+    const refreshData = () => setData(getData())
+
     useEffect(() => {
-        setData(getData())
+        refreshData()
     }, [])
 
     if (!data) return null
@@ -52,7 +57,9 @@ export default function Sales() {
                     <p className="text-secondary">Pipeline, contracts, and customer relationships</p>
                 </div>
                 {canEdit && (
-                    <button className="btn btn-primary">+ Add Lead</button>
+                    <button className="btn btn-primary" onClick={() => setShowAddModal(true)}>
+                        + Add Contract
+                    </button>
                 )}
             </div>
 
@@ -146,6 +153,7 @@ export default function Sales() {
                         { key: 'status', label: 'Status', render: (v) => <StatusBadge status={v} /> },
                     ]}
                     data={activeContracts}
+                    onRowClick={canEdit ? (row) => setEditItem(row) : undefined}
                 />
             </Card>
 
@@ -161,8 +169,20 @@ export default function Sales() {
                         { key: 'status', label: 'Status', render: (v) => <StatusBadge status={v} /> },
                     ]}
                     data={negotiations}
+                    onRowClick={canEdit ? (row) => setEditItem(row) : undefined}
                 />
             </Card>
+
+            {/* CRUD Modal */}
+            <CRUDModal
+                isOpen={showAddModal || !!editItem}
+                onClose={() => { setShowAddModal(false); setEditItem(null); }}
+                entityType="contract"
+                editItem={editItem}
+                onSave={refreshData}
+                onDelete={refreshData}
+            />
         </div>
     )
 }
+

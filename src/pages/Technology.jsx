@@ -48,7 +48,7 @@ export default function Technology() {
                     <h2 className="text-xl font-semibold" style={{ marginBottom: '4px' }}>Technology Dashboard</h2>
                     <p className="text-secondary">R&D progress, TRL levels, and technology roadmap</p>
                 </div>
-                {isAdmin && (
+                {canEdit && (
                     <button className="btn btn-primary" onClick={() => setShowAddModal(true)}>
                         + Add Technology
                     </button>

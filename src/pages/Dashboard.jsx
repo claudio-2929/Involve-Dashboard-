@@ -1,15 +1,17 @@
 // Global Overview Dashboard - Main Landing Page
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useContext } from 'react'
 import { KPITile, Card, LineChartComponent, BarChartComponent, ProgressBar, StatusBadge, PeriodSelector, DataTable, Timeline } from '../components/shared'
 import { getData, getActiveProjects, getUpcomingLaunches } from '../data/dataService'
 import { formatCurrency, formatDate, formatRelativeDate } from '../utils/formatters'
+import { AppContext } from '../App'
 
 export default function Dashboard() {
     const [data, setData] = useState(null)
+    const { year, quarter } = useContext(AppContext)
 
     useEffect(() => {
         setData(getData())
-    }, [])
+    }, [year, quarter]) // Re-fetch when period changes
 
     if (!data) return null
 
@@ -26,8 +28,21 @@ export default function Dashboard() {
     const upcomingLaunches = getUpcomingLaunches().slice(0, 4)
     const activeProjects = getActiveProjects().slice(0, 5)
 
-    // Revenue chart data
-    const revenueChartData = data.financialData.revenueByMonth.map(m => ({
+    // Revenue chart data - filter by quarter if not current year
+    const allRevenueData = data.financialData.revenueByMonth
+    const monthsInQuarter = {
+        1: ['Jan', 'Feb', 'Mar'],
+        2: ['Apr', 'May', 'Jun'],
+        3: ['Jul', 'Aug', 'Sep'],
+        4: ['Oct', 'Nov', 'Dec']
+    }
+
+    // Filter revenue data by selected quarter
+    const filteredRevenueData = allRevenueData.filter(m =>
+        monthsInQuarter[quarter].includes(m.month)
+    )
+
+    const revenueChartData = filteredRevenueData.map(m => ({
         month: m.month,
         total: m.contracts + m.grants + m.services,
         contracts: m.contracts,
@@ -48,7 +63,9 @@ export default function Dashboard() {
             <div className="flex justify-between items-center mb-6">
                 <div>
                     <h2 className="text-xl font-semibold" style={{ marginBottom: '4px' }}>Company Overview</h2>
-                    <p className="text-secondary">Real-time performance metrics across all departments</p>
+                    <p className="text-secondary">
+                        Showing data for <strong>Q{quarter} {year}</strong>
+                    </p>
                 </div>
                 <PeriodSelector />
             </div>

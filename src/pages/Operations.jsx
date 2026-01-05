@@ -1,16 +1,21 @@
 // Operations / Flight Dashboard
 import { useState, useEffect, useContext } from 'react'
 import { KPITile, Card, DataTable, StatusBadge, ProgressBar, Timeline } from '../components/shared'
+import { CRUDModal } from '../components/CRUDModal'
 import { getData, getKPIsByDepartment, getUpcomingLaunches, getCompletedLaunches } from '../data/dataService'
 import { formatDate, formatNumber } from '../utils/formatters'
 import { AppContext } from '../App'
 
 export default function Operations() {
     const [data, setData] = useState(null)
+    const [showAddModal, setShowAddModal] = useState(false)
+    const [editItem, setEditItem] = useState(null)
     const { canEdit } = useContext(AppContext)
 
+    const refreshData = () => setData(getData())
+
     useEffect(() => {
-        setData(getData())
+        refreshData()
     }, [])
 
     if (!data) return null
@@ -50,7 +55,9 @@ export default function Operations() {
                     <p className="text-secondary">Flight operations, launches, and platform metrics</p>
                 </div>
                 {canEdit && (
-                    <button className="btn btn-primary">+ Schedule Launch</button>
+                    <button className="btn btn-primary" onClick={() => setShowAddModal(true)}>
+                        + Schedule Launch
+                    </button>
                 )}
             </div>
 
@@ -128,6 +135,7 @@ export default function Operations() {
                                 { key: 'status', label: 'Status', render: (v) => <StatusBadge status={v} /> },
                             ]}
                             data={upcomingLaunches}
+                            onRowClick={canEdit ? (row) => setEditItem(row) : undefined}
                         />
                     ) : (
                         <div className="empty-state" style={{ padding: '32px' }}>
@@ -165,8 +173,20 @@ export default function Operations() {
                         },
                     ]}
                     data={completedLaunches.slice(0, 8)}
+                    onRowClick={canEdit ? (row) => setEditItem(row) : undefined}
                 />
             </Card>
+
+            {/* CRUD Modal */}
+            <CRUDModal
+                isOpen={showAddModal || !!editItem}
+                onClose={() => { setShowAddModal(false); setEditItem(null); }}
+                entityType="launch"
+                editItem={editItem}
+                onSave={refreshData}
+                onDelete={refreshData}
+            />
         </div>
     )
 }
+

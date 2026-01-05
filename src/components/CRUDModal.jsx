@@ -63,7 +63,7 @@ const fieldConfigs = {
 
 // CRUD Form Modal
 export function CRUDModal({ isOpen, onClose, entityType, editItem, onSave, onDelete }) {
-    const { isAdmin } = useContext(AppContext)
+    const { canEdit } = useContext(AppContext)
     const [formData, setFormData] = useState({})
     const [errors, setErrors] = useState([])
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
@@ -145,7 +145,7 @@ export function CRUDModal({ isOpen, onClose, entityType, editItem, onSave, onDel
             footer={
                 <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
                     <div>
-                        {isEdit && isAdmin && !showDeleteConfirm && (
+                        {isEdit && canEdit && !showDeleteConfirm && (
                             <button
                                 className="btn btn-danger"
                                 onClick={() => setShowDeleteConfirm(true)}
@@ -259,9 +259,9 @@ export function ConfirmDialog({ isOpen, onClose, onConfirm, title, message }) {
 export function EditableCell({ value, onSave, type = 'text' }) {
     const [editing, setEditing] = useState(false)
     const [tempValue, setTempValue] = useState(value)
-    const { isAdmin } = useContext(AppContext)
+    const { canEdit } = useContext(AppContext)
 
-    if (!isAdmin) {
+    if (!canEdit) {
         return <span>{value}</span>
     }
 
