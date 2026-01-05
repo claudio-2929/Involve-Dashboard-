@@ -107,8 +107,11 @@ function Sidebar({ isOpen, onClose }) {
         <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
             <div className="sidebar-header">
                 <div className="sidebar-logo">
-                    <div className="sidebar-logo-icon">IS</div>
-                    <span className="sidebar-logo-text">Involve Space</span>
+                    <img
+                        src="/involve-logo-white.png"
+                        alt="Involve Space"
+                        style={{ height: '32px', objectFit: 'contain' }}
+                    />
                 </div>
             </div>
             <nav className="sidebar-nav">
@@ -214,7 +217,12 @@ function App() {
     const [sidebarOpen, setSidebarOpen] = useState(false)
 
     useEffect(() => {
-        document.documentElement.setAttribute('data-theme', theme)
+        // Only set attribute for light mode (dark is CSS default)
+        if (theme === 'light') {
+            document.documentElement.setAttribute('data-theme', 'light')
+        } else {
+            document.documentElement.removeAttribute('data-theme')
+        }
         localStorage.setItem('involve-theme', theme)
     }, [theme])
 

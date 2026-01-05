@@ -1,6 +1,7 @@
 // Technology / R&D Dashboard
 import { useState, useEffect, useContext } from 'react'
 import { KPITile, Card, DataTable, StatusBadge, TRLBadge, ProgressBar } from '../components/shared'
+import { CRUDModal } from '../components/CRUDModal'
 import { getData, getKPIsByDepartment, getTechnologiesByStatus } from '../data/dataService'
 import { trlDescriptions } from '../data/schema'
 import { AppContext } from '../App'
@@ -8,10 +9,14 @@ import { AppContext } from '../App'
 export default function Technology() {
     const [data, setData] = useState(null)
     const [selectedTech, setSelectedTech] = useState(null)
-    const { canEdit } = useContext(AppContext)
+    const [showAddModal, setShowAddModal] = useState(false)
+    const [editTech, setEditTech] = useState(null)
+    const { canEdit, isAdmin } = useContext(AppContext)
+
+    const refreshData = () => setData(getData())
 
     useEffect(() => {
-        setData(getData())
+        refreshData()
     }, [])
 
     if (!data) return null
@@ -30,6 +35,12 @@ export default function Technology() {
     const delayed = technologies.filter(t => t.roadmapStatus === 'delayed').length
     const accelerated = technologies.filter(t => t.roadmapStatus === 'accelerated').length
 
+    const handleTechClick = (tech) => {
+        if (isAdmin) {
+            setEditTech(tech)
+        }
+    }
+
     return (
         <div>
             <div className="flex justify-between items-center mb-6">
@@ -37,8 +48,10 @@ export default function Technology() {
                     <h2 className="text-xl font-semibold" style={{ marginBottom: '4px' }}>Technology Dashboard</h2>
                     <p className="text-secondary">R&D progress, TRL levels, and technology roadmap</p>
                 </div>
-                {canEdit && (
-                    <button className="btn btn-primary">+ Add Technology</button>
+                {isAdmin && (
+                    <button className="btn btn-primary" onClick={() => setShowAddModal(true)}>
+                        + Add Technology
+                    </button>
                 )}
             </div>
 
@@ -165,6 +178,16 @@ export default function Technology() {
                     ))}
                 </div>
             </Card>
+
+            {/* CRUD Modal */}
+            <CRUDModal
+                isOpen={showAddModal || !!editTech}
+                onClose={() => { setShowAddModal(false); setEditTech(null); }}
+                entityType="technology"
+                editItem={editTech}
+                onSave={refreshData}
+                onDelete={refreshData}
+            />
         </div>
     )
 }

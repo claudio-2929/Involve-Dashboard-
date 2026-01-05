@@ -1,6 +1,7 @@
 // Projects & Programs Dashboard
 import { useState, useEffect, useContext } from 'react'
 import { KPITile, Card, DataTable, StatusBadge, ProgressBar, Modal } from '../components/shared'
+import { CRUDModal } from '../components/CRUDModal'
 import { getData, getKPIsByDepartment, getActiveProjects, getProjectsByType } from '../data/dataService'
 import { formatCurrency, formatDate, calculateProgress } from '../utils/formatters'
 import { AppContext } from '../App'
@@ -8,10 +9,14 @@ import { AppContext } from '../App'
 export default function Projects() {
     const [data, setData] = useState(null)
     const [selectedProject, setSelectedProject] = useState(null)
-    const { canEdit } = useContext(AppContext)
+    const [showAddModal, setShowAddModal] = useState(false)
+    const [editProject, setEditProject] = useState(null)
+    const { canEdit, isAdmin } = useContext(AppContext)
+
+    const refreshData = () => setData(getData())
 
     useEffect(() => {
-        setData(getData())
+        refreshData()
     }, [])
 
     if (!data) return null
@@ -33,6 +38,11 @@ export default function Projects() {
     const totalBudget = activeProjects.reduce((sum, p) => sum + (p.budget || 0), 0)
     const totalSpent = activeProjects.reduce((sum, p) => sum + (p.spent || 0), 0)
 
+    const handleEditClick = (project) => {
+        setSelectedProject(null)
+        setEditProject(project)
+    }
+
     return (
         <div>
             <div className="flex justify-between items-center mb-6">
@@ -40,8 +50,10 @@ export default function Projects() {
                     <h2 className="text-xl font-semibold" style={{ marginBottom: '4px' }}>Projects & Programs</h2>
                     <p className="text-secondary">Active initiatives, budgets, and milestones</p>
                 </div>
-                {canEdit && (
-                    <button className="btn btn-primary">+ New Project</button>
+                {isAdmin && (
+                    <button className="btn btn-primary" onClick={() => setShowAddModal(true)}>
+                        + New Project
+                    </button>
                 )}
             </div>
 
@@ -49,7 +61,7 @@ export default function Projects() {
             <div className="kpi-grid mb-6">
                 <KPITile
                     label="Active Projects"
-                    value={activeKPI.value}
+                    value={activeProjects.length}
                     target={activeKPI.target}
                     previousValue={activeKPI.previousValue}
                     icon="brand"
@@ -68,7 +80,7 @@ export default function Projects() {
                 />
                 <KPITile
                     label="Budget Utilization"
-                    value={Math.round((totalSpent / totalBudget) * 100)}
+                    value={totalBudget > 0 ? Math.round((totalSpent / totalBudget) * 100) : 0}
                     target={85}
                     unit="%"
                     icon="success"
@@ -158,6 +170,7 @@ export default function Projects() {
                             { key: 'status', label: 'Status', render: (v) => <StatusBadge status={v} /> },
                         ]}
                         data={completedProjects}
+                        onRowClick={isAdmin ? (row) => setEditProject(row) : undefined}
                     />
                 </Card>
             )}
@@ -168,12 +181,14 @@ export default function Projects() {
                 onClose={() => setSelectedProject(null)}
                 title={selectedProject?.name}
                 footer={
-                    canEdit && (
-                        <>
-                            <button className="btn btn-secondary" onClick={() => setSelectedProject(null)}>Close</button>
-                            <button className="btn btn-primary">Edit Project</button>
-                        </>
-                    )
+                    <>
+                        <button className="btn btn-secondary" onClick={() => setSelectedProject(null)}>Close</button>
+                        {isAdmin && (
+                            <button className="btn btn-brand" onClick={() => handleEditClick(selectedProject)}>
+                                Edit Project
+                            </button>
+                        )}
+                    </>
                 }
             >
                 {selectedProject && (
@@ -209,6 +224,17 @@ export default function Projects() {
                     </div>
                 )}
             </Modal>
+
+            {/* Add/Edit CRUD Modal */}
+            <CRUDModal
+                isOpen={showAddModal || !!editProject}
+                onClose={() => { setShowAddModal(false); setEditProject(null); }}
+                entityType="project"
+                editItem={editProject}
+                onSave={refreshData}
+                onDelete={refreshData}
+            />
         </div>
     )
 }
+
